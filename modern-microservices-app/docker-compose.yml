@@ -1,0 +1,84 @@
+services:
+  client:
+    build: ./client
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    depends_on:
+      - api-gateway
+
+  api-gateway:
+    build: ./server/api-gateway
+    ports:
+      - "4000:4000"
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:4001
+      USER_SERVICE_URL: http://user-service:4002
+      CONTENT_SERVICE_URL: http://content-service:4003
+      FASTAPI_SERVICE_URL: http://analytics-service:8000
+    depends_on:
+      - auth-service
+      - user-service
+      - content-service
+      - analytics-service
+
+  auth-service:
+    build: ./server/services/auth-service
+    ports:
+      - "4001:4001"
+    environment:
+      PORT: 4001
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+
+  user-service:
+    build: ./server/services/user-service
+    ports:
+      - "4002:4002"
+    environment:
+      PORT: 4002
+      DATABASE_URL: postgresql://app:app@postgres:5432/appdb
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+
+  content-service:
+    build: ./server/services/content-service
+    ports:
+      - "4003:4003"
+    environment:
+      PORT: 4003
+      MONGO_URL: mongodb://mongo:27017/contentdb
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+
+  analytics-service:
+    build: ./server/services/analytics-service
+    ports:
+      - "8000:8000"
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: appdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:8
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  postgres_data:
+  mongo_data:

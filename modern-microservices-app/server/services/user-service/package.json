@@ -1,0 +1,1 @@
+{"scripts":{"start":"node src/index.js","dev":"node --watch src/index.js"},"dependencies":{"express":"^5.1.0","pg":"^8.16.3"}}
